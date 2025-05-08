@@ -55,9 +55,9 @@ const postChat = async (req, res) => {
         const userFile = req.file || null;
         // console.log("userFile", userFile);
         const userId = `admin-${req.user?._id}` || "123";
-
         // OR input file from user by req.file//
         // fileInfo: userFileInfo,
+        // console.log("admin-", req.user?.role.toString());
         let userFileInfo = null;
         if (userFile) {
             userFileInfo = {
@@ -77,7 +77,7 @@ const postChat = async (req, res) => {
             ],
         }).sort({ createdAt: -1 });
 
-        // console.log("docs", docs);
+        // console.log("admin-docs", docs);
         // console.log("doc", docs.length > 0);
         const context = docs
             .map((doc) => {
@@ -119,9 +119,11 @@ const postChat = async (req, res) => {
         // console.log("aiResponseType", aiResponse);
         // res.status(200).json({ chatHistory: aiResponse });
         // console.log("aiResponse", aiResponse.text);
+        console.log("admin-", req.user?.role.toString());
+
         const userMessage = new Message({
             senderId: userId,
-            sender: "user",
+            sender: req.user?.role.toString() || "admin",
             text: userText,
             responseType: userFile ? userFile.mime : "text", //if it null that means only text
             extraData: null, // it is not necessary to user , ai give the json data so right now it is empty
@@ -158,7 +160,11 @@ const postChat = async (req, res) => {
         await aiMessage.save();
 
         const recentDocs = await Message.find({
-            $or: [{ senderId: userId }, { senderId: `ai-${userId}` }], // admin uploads are not necessary to show in chat history
+            $or: [
+                { senderId: userId },
+                { senderId: `ai-${userId}` },
+                { senderId: `admin-${userId}` },
+            ], // admin uploads are not necessary to show in chat history
         }).sort({ createdAt: -1 });
 
         res.status(200).json({
@@ -173,12 +179,16 @@ const postChat = async (req, res) => {
 
 const getChats = async (req, res) => {
     try {
-        const userId = req.user?._id || "123";
-
+        const userId = req.user?._id.toString() || "123";
+        // console.log("userId-admin", userId);
         const chatHistory = await Message.find({
-            $or: [{ senderId: userId }, { senderId: `ai-${userId}` }], // admin uploads are not necessary to show in chat history
+            $or: [
+                { senderId: userId },
+                { senderId: `ai-${userId}` },
+                { senderId: `admin-${userId}` },
+            ], // admin uploads are not necessary to show in chat history
         }).sort({ createdAt: -1 });
-
+        console.log("chatHistory", chatHistory);
         if (!chatHistory.length) {
             return res.status(404).json({ message: "No chat history found" });
         }

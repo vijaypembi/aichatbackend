@@ -8,6 +8,7 @@ const mammoth = require("mammoth");
 const textract = require("textract");
 const XLSX = require("xlsx");
 const util = require("util");
+const { console } = require("inspector");
 
 const extractWithTextract = util.promisify(textract.fromBufferWithMime);
 
@@ -55,6 +56,7 @@ const postChat = async (req, res) => {
         const userFile = req.file || null;
         // console.log("userFile", userFile);
         const userId = req.user?._id || "123";
+
         // OR input file from user by req.file//
         // fileInfo: userFileInfo,
         let userFileInfo = null;
@@ -115,12 +117,11 @@ const postChat = async (req, res) => {
         }\n\nQuestion:\n${userText}\n\n${fileInfo}\n\nDocument Content:\n${extractedText}\n\nAnswer:`;
 
         const aiResponse = await getAIResponse(prompt); // right now i am using GeminiAI
-        // console.log("aiResponseType", aiResponse);
-        // res.status(200).json({ chatHistory: aiResponse });
-        // console.log("aiResponse", aiResponse.text);
+        // console.log("aiResponse", aiResponse);
+
         const userMessage = new Message({
             senderId: userId,
-            sender: "user",
+            sender: req.user?.role.toString() || "user",
             text: userText,
             responseType: userFile ? userFile.mime : "text", //if it null that means only text
             extraData: null, // it is not necessary to user , ai give the json data so right now it is empty
@@ -160,7 +161,7 @@ const postChat = async (req, res) => {
             $or: [
                 { senderId: userId },
                 { senderId: `ai-${userId}` },
-                { senderId: "admin" },
+                { senderId: `admin-${userId}` },
             ],
         }).sort({ createdAt: -1 });
 
@@ -176,12 +177,13 @@ const postChat = async (req, res) => {
 
 const getChats = async (req, res) => {
     try {
-        const userId = req.user?._id || "123";
+        const userId = req.user?._id.toString() || "123";
+        // console.log("userId-chat", userId);
         const chatHistory = await Message.find({
             $or: [
                 { senderId: userId },
                 { senderId: `ai-${userId}` },
-                { senderId: "admin" },
+                { senderId: `admin-${userId}` },
             ],
         }).sort({ createdAt: -1 });
 

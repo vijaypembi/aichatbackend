@@ -4,10 +4,9 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 exports.authMiddleware = async (req, res, next) => {
-    // const authHeader = req.headers.authorization;
-
-    const token = req.cookies.token;
-    // console.log("Token from cookie:", token); // Debugging line
+    // Add authorization header fallback
+    const token = req.cookies.aichattoken;
+    // console.log("Token:", req.cookies.aichattoken); // Debugging line
     if (!token) {
         return res.status(401).json({ message: "Not authorized" });
     }
@@ -16,6 +15,7 @@ exports.authMiddleware = async (req, res, next) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         // Add fresh user check
+        // console.log("Decoded:", decoded.id); // Debugging line
         const user = await User.findById(decoded.id).select("-password");
         if (!user) {
             return res.status(401).json({ message: "User not found" });

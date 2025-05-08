@@ -1,5 +1,5 @@
 const express = require("express");
-const { postChat, getChats } = require("../controllers/chatController");
+const { postChat, getChats } = require("../controllers/adminController");
 
 const multer = require("multer");
 const storage = multer.memoryStorage(); // store in memory
