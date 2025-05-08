@@ -23,6 +23,7 @@ app.use(
     })
 );
 app.use(express.json());
+app.use(express.static("public"));
 
 // api/chat/
 // /api/auth/register
