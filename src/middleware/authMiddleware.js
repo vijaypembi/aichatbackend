@@ -4,13 +4,10 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 exports.authMiddleware = async (req, res, next) => {
-    const authHeader = req.headers.authorization;
+    // const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({ message: "Not authorized" });
-    }
-
-    const token = authHeader.split(" ")[1];
+    const token = req.cookies.token;
+    // console.log("Token from cookie:", token); // Debugging line
     if (!token) {
         return res.status(401).json({ message: "Not authorized" });
     }
