@@ -4,8 +4,6 @@ const bcrypt = require("bcryptjs");
 const User = require("../model/User");
 const { generateToken } = require("../config/generateToken");
 
-const JWT_SECRET = "your_jwt_secret"; // Use env in production
-
 exports.register = async (req, res) => {
     try {
         const { name, email, password, role } = req.body;
@@ -33,16 +31,11 @@ exports.register = async (req, res) => {
         });
         await newUser.save();
 
-        const token = generateToken(newUser); // pass full user object
-        res.cookie("aichattoken", token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production", // true in production
-            sameSite: "lax",
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-        });
+        const token = generateToken(newUser);
 
         res.status(201).json({
             message: "User registered successfully",
+            token,
             user: {
                 id: newUser._id,
                 name: newUser.name,
@@ -70,15 +63,10 @@ exports.login = async (req, res) => {
             return res.status(401).json({ message: "Invalid credentials" });
 
         const token = generateToken(user);
-        res.cookie("aichattoken", token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production", // true in production
-            sameSite: "lax", // or "none" if using cross-site
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-        });
 
         res.status(200).json({
             message: "Login successful",
+            token,
             user: {
                 id: user._id,
                 name: user.name,

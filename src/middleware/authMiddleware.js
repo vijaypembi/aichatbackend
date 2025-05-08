@@ -4,9 +4,13 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 exports.authMiddleware = async (req, res, next) => {
-    // Add authorization header fallback
-    const token = req.cookies.aichattoken;
-    console.log("Token:", req.cookies.aichattoken); // Debugging line
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ message: "Not authorized" });
+    }
+
+    const token = authHeader.split(" ")[1];
     if (!token) {
         return res.status(401).json({ message: "Not authorized" });
     }
