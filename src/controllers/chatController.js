@@ -55,7 +55,7 @@ const postChat = async (req, res) => {
 
         const userFile = req.file || null;
         // console.log("userFile", userFile);
-        const userId = req.user?._id || "123";
+        const userId = req.user?._id.toString() || "123";
 
         // OR input file from user by req.file//
         // fileInfo: userFileInfo,
@@ -74,7 +74,7 @@ const postChat = async (req, res) => {
             $or: [
                 { senderId: userId },
                 { senderId: `ai-${userId}` },
-                { senderId: `admin-${userId}` },
+                { senderId: { $regex: /^admin-/ } }, // matches any senderId starting with "admin-"
             ],
         }).sort({ createdAt: -1 });
 
@@ -158,11 +158,7 @@ const postChat = async (req, res) => {
         await aiMessage.save();
 
         const recentDocs = await Message.find({
-            $or: [
-                { senderId: userId },
-                { senderId: `ai-${userId}` },
-                { senderId: `admin-${userId}` },
-            ],
+            $or: [{ senderId: userId }, { senderId: `ai-${userId}` }],
         }).sort({ createdAt: -1 });
 
         res.status(200).json({
@@ -180,11 +176,7 @@ const getChats = async (req, res) => {
         const userId = req.user?._id.toString() || "123";
         // console.log("userId-chat", userId);
         const chatHistory = await Message.find({
-            $or: [
-                { senderId: userId },
-                { senderId: `ai-${userId}` },
-                { senderId: `admin-${userId}` },
-            ],
+            $or: [{ senderId: userId }, { senderId: `ai-${userId}` }],
         }).sort({ createdAt: -1 });
 
         if (!chatHistory.length) {

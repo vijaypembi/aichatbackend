@@ -5,7 +5,8 @@ dotenv.config();
 
 exports.authMiddleware = async (req, res, next) => {
     // Add authorization header fallback
-    const token = req.cookies.aichattoken;
+    const token = req.headers.authorization?.split(" ")[1]; // Extract token from Bearer
+    // console.log(token);
     // console.log("Token:", req.cookies.aichattoken); // Debugging line
     if (!token) {
         return res.status(401).json({ message: "Not authorized" });

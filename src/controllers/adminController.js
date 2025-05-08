@@ -54,7 +54,7 @@ const postChat = async (req, res) => {
 
         const userFile = req.file || null;
         // console.log("userFile", userFile);
-        const userId = `admin-${req.user?._id}` || "123";
+        const userId = `${req.user?._id.toString()}` || "123";
         // OR input file from user by req.file//
         // fileInfo: userFileInfo,
         // console.log("admin-", req.user?.role.toString());
@@ -73,7 +73,7 @@ const postChat = async (req, res) => {
             $or: [
                 { senderId: userId },
                 { senderId: `ai-${userId}` },
-                { senderId: `admin-${userId}` },
+                { senderId: { $regex: /^admin-/ } }, // matches any senderId starting with "admin-"
             ],
         }).sort({ createdAt: -1 });
 
@@ -119,10 +119,9 @@ const postChat = async (req, res) => {
         // console.log("aiResponseType", aiResponse);
         // res.status(200).json({ chatHistory: aiResponse });
         // console.log("aiResponse", aiResponse.text);
-        console.log("admin-", req.user?.role.toString());
 
         const userMessage = new Message({
-            senderId: userId,
+            senderId: `admin-${userId}`,
             sender: req.user?.role.toString() || "admin",
             text: userText,
             responseType: userFile ? userFile.mime : "text", //if it null that means only text
@@ -142,6 +141,7 @@ const postChat = async (req, res) => {
             declaredMime !== "text" && declaredMime !== "file";
 
         // Step 3: Create Message model instance
+        // console.log(userId);
         const aiMessage = new Message({
             senderId: `ai-${userId}`,
             sender: "ai",
@@ -161,12 +161,11 @@ const postChat = async (req, res) => {
 
         const recentDocs = await Message.find({
             $or: [
-                { senderId: userId },
                 { senderId: `ai-${userId}` },
                 { senderId: `admin-${userId}` },
             ], // admin uploads are not necessary to show in chat history
-        }).sort({ createdAt: -1 });
-
+        }).sort({ createdAt: 1 });
+        // console.log("post-admin", recentDocs);
         res.status(200).json({
             message: "success",
             chatHistory: recentDocs,
@@ -180,22 +179,21 @@ const postChat = async (req, res) => {
 const getChats = async (req, res) => {
     try {
         const userId = req.user?._id.toString() || "123";
-        // console.log("userId-admin", userId);
-        const chatHistory = await Message.find({
+        const recentDocs = await Message.find({
             $or: [
-                { senderId: userId },
                 { senderId: `ai-${userId}` },
                 { senderId: `admin-${userId}` },
             ], // admin uploads are not necessary to show in chat history
-        }).sort({ createdAt: -1 });
-        console.log("chatHistory", chatHistory);
-        if (!chatHistory.length) {
+        }).sort({ createdAt: 1 });
+        // console.log("userId-admin", userId);
+        // console.log("get-admin", recentDocs.length);
+        if (!recentDocs.length) {
             return res.status(404).json({ message: "No chat history found" });
         }
 
         return res.status(200).json({
             message: "success",
-            chatHistory,
+            chatHistory: recentDocs,
         });
     } catch (err) {
         console.error("Error in getChats:", err);
