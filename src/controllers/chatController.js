@@ -159,7 +159,7 @@ const postChat = async (req, res) => {
 
         const recentDocs = await Message.find({
             $or: [{ senderId: userId }, { senderId: `ai-${userId}` }],
-        }).sort({ createdAt: -1 });
+        }).sort({ createdAt: 1 });
 
         res.status(200).json({
             message: "success",
@@ -177,7 +177,7 @@ const getChats = async (req, res) => {
         // console.log("userId-chat", userId);
         const chatHistory = await Message.find({
             $or: [{ senderId: userId }, { senderId: `ai-${userId}` }],
-        }).sort({ createdAt: -1 });
+        }).sort({ createdAt: 1 });
 
         if (!chatHistory.length) {
             return res.status(404).json({ message: "No chat history found" });
