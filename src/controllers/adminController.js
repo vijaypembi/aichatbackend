@@ -158,11 +158,7 @@ const postChat = async (req, res) => {
         await aiMessage.save();
 
         const recentDocs = await Message.find({
-            $or: [
-                { senderId: userId },
-                { senderId: `ai-${userId}` },
-                { senderId: `admin-${userId}` },
-            ],
+            $or: [{ senderId: userId }, { senderId: `ai-${userId}` }], // admin uploads are not necessary to show in chat history
         }).sort({ createdAt: -1 });
 
         res.status(200).json({
@@ -177,14 +173,10 @@ const postChat = async (req, res) => {
 
 const getChats = async (req, res) => {
     try {
-        const userId = req.userId || "123";
+        const userId = req.user?._id || "123";
 
         const chatHistory = await Message.find({
-            $or: [
-                { senderId: userId },
-                { senderId: `ai-${userId}` },
-                { senderId: `admin-${userId}` },
-            ],
+            $or: [{ senderId: userId }, { senderId: `ai-${userId}` }], // admin uploads are not necessary to show in chat history
         }).sort({ createdAt: -1 });
 
         if (!chatHistory.length) {

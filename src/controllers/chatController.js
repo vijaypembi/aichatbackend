@@ -176,8 +176,7 @@ const postChat = async (req, res) => {
 
 const getChats = async (req, res) => {
     try {
-        const userId = req.userId || "123";
-
+        const userId = req.user?._id || "123";
         const chatHistory = await Message.find({
             $or: [
                 { senderId: userId },
